@@ -79,10 +79,22 @@ def notify_students(notices):
 
 @app.route('/scan', methods=['GET'])
 def scan():
-    notices = fetch_notices()
+    notices = fetch_notices()  # Fetch new notices
     if notices:
-        notify_students(notices)
+        notify_students(notices)  # Notify students if there are new notices
+    
+    # Fetch the latest notice
+    c.execute("SELECT title, date, link FROM notices ORDER BY id DESC LIMIT 1")
+    latest_notice = c.fetchone()
+    if latest_notice:
+        # Construct the message for the latest notice
+        msg = f"[New Notice]\n{latest_notice[0]}\nDate: {latest_notice[1]}\nLink: {latest_notice[2]}"
+        
+        # Send to a registered phone number (replace with a valid number in format "+123456789")
+        send_whatsapp("+919496097469", msg)  # Replace this with the actual registered phone number
+
     return jsonify({'new_notices': notices})
+
 
 @app.route('/notices', methods=['GET'])
 def get_notices():
@@ -100,4 +112,6 @@ def register(name, phone):
         return jsonify({'status': 'already exists'})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
